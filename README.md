@@ -43,4 +43,4 @@ Compiled firmware binaries (also attached to GitHub Releases):
 - `firmware.bin` — Application binary (flash at `0x10000`)
 - `bootloader.bin` — Bootloader (flash at `0x0`)
 - `partitions.bin` — Partition table (flash at `0x8000`)
-- `esp32-c3-rc-car-merged.bin` — Single merged image (flash at `0x0`)
+- `firmware-full.bin` — Full merged image (bootloader + partitions + boot_app0 + app, flash at `0x0`)
