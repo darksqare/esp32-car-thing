@@ -128,9 +128,9 @@ namespace {
     }
 
     void setupWiFiAP() {
+        WiFi.persistent(false);
         WiFi.mode(WIFI_AP);
-        WiFi.setSleep(false);
-        WiFi.softAPConfig(AP_IP, AP_IP, AP_NETMASK);
+        delay(100);
 
         bool ok = false;
         if (strlen(settings.apPass) >= 8) {
@@ -138,6 +138,13 @@ namespace {
         } else {
             ok = WiFi.softAP(settings.apSsid);
         }
+        delay(100);
+
+        WiFi.softAPConfig(AP_IP, AP_IP, AP_NETMASK);
+        WiFi.setSleep(false);
+        // ESP32-C3 SuperMini boards suffer RF self-interference/brownout at 19.5 dBm;
+        // 8.5 dBm is the standard reliable TX power for SuperMini AP/STA operation.
+        WiFi.setTxPower(WIFI_POWER_8_5dBm);
 
         Serial.printf("[WiFi] AP %s: SSID='%s' IP=%s\n",
                       ok ? "started" : "FAILED",
@@ -152,8 +159,22 @@ namespace {
         ws.onEvent(onWsEvent);
         server.addHandler(&ws);
 
-        server.on("/", HTTP_GET, [](AsyncWebServerRequest* req) {
-            req->send(200, "text/html", INDEX_HTML);
+        auto sendIndex = [](AsyncWebServerRequest* req) {
+            AsyncWebServerResponse* res = req->beginResponse(
+                200, "text/html",
+                reinterpret_cast<const uint8_t*>(INDEX_HTML),
+                sizeof(INDEX_HTML) - 1
+            );
+            res->addHeader("Cache-Control", "no-store");
+            req->send(res);
+        };
+
+        server.on("/", HTTP_GET, sendIndex);
+        server.on("/generate_204", HTTP_GET, sendIndex);
+        server.on("/gen_204", HTTP_GET, sendIndex);
+        server.on("/hotspot-detect.html", HTTP_GET, sendIndex);
+        server.on("/connecttest.txt", HTTP_GET, [](AsyncWebServerRequest* req) {
+            req->redirect("http://192.168.4.1/");
         });
 
         server.on("/api/status", HTTP_GET, [](AsyncWebServerRequest* req) {

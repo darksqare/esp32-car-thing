@@ -24,7 +24,7 @@ def merge_bin(source, target, env):
         "merge_bin",
         "-o", merged_out,
         "--flash_mode", env.BoardConfig().get("build.flash_mode", "dio"),
-        "--flash_freq", "80m",
+        "--flash_freq", "40m",
         "--flash_size", "4MB",
         "0x0", bootloader,
         "0x8000", partitions,
